@@ -16,5 +16,5 @@ def transcribe_audio(file_path):
     return response.text
 
 # Test it
-transcript = transcribe_audio("test_call.mp3")
+transcript = transcribe_audio("test_call.m4a")
 print("Transcript:", transcript)
