@@ -96,4 +96,6 @@ def run_pipeline(audio_file_path):
         print(f"Service ID: {result['service']['id']}")
         print(f"New customer: {result['is_new_customer']}")
 
-run_pipeline("test_call.m4a")
+# CORRECT — only runs when you execute pipeline.py directly
+if __name__ == "__main__":
+    run_pipeline("test_call.m4a")
