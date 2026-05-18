@@ -2,3 +2,9 @@ venv/
 .env
 __pycache__/
 test_call.m4a
+test_call_marathi.m4a
+test_call_hindi.m4a
+test_call.wav
+test_call_marathi.wav
+test_call_hindi.wav
+ffmpeg.exe

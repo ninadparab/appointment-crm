@@ -11,7 +11,12 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Step 1 — Transcribe audio
 def transcribe_audio(file_path):
-    print("Transcribing audio...")
+    if os.getenv("USE_INDIAN_LANGUAGES", "false").lower() == "true":
+        print("🇮🇳 Indian language mode ON — using Sarvam AI")
+        from transcribe_sarvam import transcribe_audio_indian
+        return transcribe_audio_indian(file_path)
+    
+    print("🇬🇧 English mode — using OpenAI Whisper")
     with open(file_path, "rb") as audio_file:
         response = client.audio.transcriptions.create(
             model="whisper-1",
@@ -43,11 +48,11 @@ def extract_appointment(transcript):
                 \"{transcript}\"
 
                 Return a JSON object with these fields:
-                - customer_name (string or null)
+                - customer_name (string or null — always write in Roman/English script, not Devanagari)
                 - phone (string or null)
-                - date (string in DD-MM-YYYY format or null)
+                - date (string in YYYY-MM-DD format only, or null)
                 - time (string in HH:MM format or null)
-                - service_requested (string or null)
+                - service_requested (string or null — in English)
                 - lead_source (Facebook / Instagram / Google / Referral / Walk-in / Unknown)
                 - notes (string or null)
                 
@@ -98,4 +103,4 @@ def run_pipeline(audio_file_path):
 
 # CORRECT — only runs when you execute pipeline.py directly
 if __name__ == "__main__":
-    run_pipeline("test_call.m4a")
+    run_pipeline("test_call_marathi.m4a")
