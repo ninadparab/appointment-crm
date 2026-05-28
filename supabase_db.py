@@ -30,18 +30,24 @@ def create_customer(data):
     return result.data[0]
 
 def get_or_create_customer(data):
-    """Look up customer by phone, create if not found"""
     phone = data.get("phone")
-    
+    extracted_name = data.get("customer_name")
+
     if phone:
         existing = find_customer_by_phone(phone)
         if existing:
+            # If name doesn't match, create new customer
+            if extracted_name and existing["name"].lower() != extracted_name.lower():
+                print(f"Different name detected — creating new customer: {extracted_name}")
+                new_customer = create_customer(data)
+                return new_customer, True
+
             print(f"Existing customer found: {existing['name']}")
-            return existing, False  # False = not newly created
-    
+            return existing, False
+
     new_customer = create_customer(data)
     print(f"New customer created: {new_customer['name']}")
-    return new_customer, True  # True = newly created
+    return new_customer, True
 
 # ── SERVICES ───────────────────────────────────────────
 
