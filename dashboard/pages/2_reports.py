@@ -38,11 +38,14 @@ earliest, latest = get_data_range()
 
 if earliest and latest:
     st.info(f"📅 Data available from **{earliest}** to **{latest}**")
-    default_start = pd.to_datetime(earliest).date()
     default_end = pd.to_datetime(latest).date()
+    default_start = max(
+        pd.to_datetime(earliest).date(),
+        default_end - timedelta(days=365)
+    )
 else:
-    default_start = date.today() - timedelta(days=365)
     default_end = date.today()
+    default_start = date.today() - timedelta(days=365)
 
 # ── Date range picker ──────────────────────────────────
 st.markdown("### Date Range")
