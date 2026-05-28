@@ -5,21 +5,12 @@ from dotenv import load_dotenv
 from pipeline import transcribe_audio, extract_appointment
 from supabase_db import save_appointment
 
-processed_recordings = set()
-
-@app.route("/webhook/twilio/recording", methods=["POST"])
-def handle_twilio_recording():
-    recording_sid = request.form.get("RecordingSid")
-    
-    # Prevent duplicate processing
-    if recording_sid in processed_recordings:
-        print(f"Already processed recording {recording_sid}, skipping...")
-        return "", 200
-    processed_recordings.add(recording_sid)
-
 load_dotenv()
 
 app = Flask(__name__)
+
+# Track processed recordings to avoid duplicates
+processed_recordings = set()
 
 # ── ROOT ─────────────────────────────────────────────────────
 
@@ -112,9 +103,16 @@ def handle_twilio_recording():
     """Twilio calls this when recording is complete"""
     print("\n🎙️ Recording complete from Twilio...")
 
+    recording_sid = request.form.get("RecordingSid")
     recording_url = request.form.get("RecordingUrl")
     caller = request.form.get("From")
     recording_duration = request.form.get("RecordingDuration")
+
+    # Prevent duplicate processing
+    if recording_sid in processed_recordings:
+        print(f"Already processed {recording_sid}, skipping...")
+        return "", 200
+    processed_recordings.add(recording_sid)
 
     print(f"Caller: {caller}")
     print(f"Recording duration: {recording_duration} seconds")
@@ -160,7 +158,6 @@ def handle_whatsapp():
     data = request.json
 
     try:
-        # Interakt webhook format
         msg_type = data.get("type")
         if msg_type != "message_received":
             return jsonify({"status": "ignored"}), 200
