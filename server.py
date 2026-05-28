@@ -5,6 +5,18 @@ from dotenv import load_dotenv
 from pipeline import transcribe_audio, extract_appointment
 from supabase_db import save_appointment
 
+processed_recordings = set()
+
+@app.route("/webhook/twilio/recording", methods=["POST"])
+def handle_twilio_recording():
+    recording_sid = request.form.get("RecordingSid")
+    
+    # Prevent duplicate processing
+    if recording_sid in processed_recordings:
+        print(f"Already processed recording {recording_sid}, skipping...")
+        return "", 200
+    processed_recordings.add(recording_sid)
+
 load_dotenv()
 
 app = Flask(__name__)
