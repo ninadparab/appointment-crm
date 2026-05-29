@@ -35,6 +35,43 @@ def index():
 def health():
     return jsonify({"status": "running"}), 200
 
+# MyOperator webhook parameters
+
+@app.route("/webhook/myoperator", methods=["POST"])
+def handle_myoperator():
+    print("\n📞 Incoming webhook from MyOperator...")
+
+    data = request.json
+    print(f"Raw payload: {data}")  # debug to see structure
+
+    # MyOperator Webhook v2 format
+    event_type = data.get("event_type")
+    payload = data.get("payload", {})
+
+    # Only process call.summary events
+    if event_type != "call.summary":
+        print(f"Ignoring event: {event_type}")
+        return jsonify({"status": "ignored"}), 200
+
+    # Extract call data from payload
+    recording_url = payload.get("recording_url")
+    caller_number = payload.get("caller_number") or payload.get("from")
+    call_duration = payload.get("duration")
+
+    print(f"Caller: {caller_number}")
+    print(f"Duration: {call_duration} seconds")
+    print(f"Recording URL: {recording_url}")
+
+    if not recording_url:
+        print("No recording URL, skipping...")
+        return jsonify({"status": "ignored", "reason": "no recording"}), 200
+
+    if int(call_duration or 0) < 10:
+        print("Call too short, skipping...")
+        return jsonify({"status": "ignored", "reason": "call too short"}), 200
+
+    audio_path = download_audio(recording_url)
+    return process_audio(audio_path, caller_phone=caller_number)
 
 # ── EXOTEL WEBHOOK ───────────────────────────────────────────
 
