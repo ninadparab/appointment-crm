@@ -113,8 +113,6 @@ appointment-crm/
 ├── transcribe_sarvam.py     # Sarvam AI integration (Indian languages)
 ├── zoho_auth_manager.py     # Legacy Zoho OAuth (kept for reference)
 ├── migrate.py               # Data migration: Excel → Supabase
-├── migrate_homecare.py      # Domain-specific migration with data cleaning
-│
 ├── requirements.txt         # Flask server dependencies
 ├── Procfile                 # Render deployment config
 ├── .python-version          # Python 3.11
@@ -128,31 +126,6 @@ appointment-crm/
         ├── 2_Reports.py     # Analytics: charts, top clients, area map
         ├── 3_Add_Customer.py # Add customer form (+ optional first service)
         └── 4_Add_Service.py  # Add service to existing customer
-```
-
----
-
-## 🗄️ Database Schema
-
-```sql
--- Normalized relational model with canonical service types
-
-customers (id, name, phone, additional_phones, email,
-           address, area, category, lead_source, comments)
-
-service_types (id, canonical_name, main_category, sub_category)
--- e.g. "Flat — 2BHK", main="Flat", sub="2BHK"
-
-services (id, customer_id, service_type_id,
-          main_category, sub_category,
-          date_of_service, nature_of_service,
-          quantity, rate_per_unit, total_amount,
-          has_issues, issue_notes, amount_in_comments)
-
-employees (id, name, phone, designation, status)
-
-service_assignments (id, service_id, employee_id, role)
--- Junction table for many-to-many employee ↔ service
 ```
 
 ---
@@ -200,65 +173,8 @@ INTERAKT_SECRET_KEY=your_key
 
 ### 3. Set Up Database
 
-Run in Supabase SQL Editor:
+Run in Supabase SQL Editor
 
-```sql
-CREATE TABLE service_types (
-    id SERIAL PRIMARY KEY,
-    canonical_name TEXT,
-    main_category TEXT,
-    sub_category TEXT
-);
-
-CREATE TABLE customers (
-    id SERIAL PRIMARY KEY,
-    name TEXT,
-    phone TEXT,
-    additional_phones TEXT,
-    email TEXT,
-    address TEXT,
-    area TEXT,
-    category TEXT,
-    lead_source TEXT,
-    comments TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE employees (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    phone TEXT,
-    designation TEXT,
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE services (
-    id SERIAL PRIMARY KEY,
-    customer_id INTEGER REFERENCES customers(id),
-    service_type_id INTEGER REFERENCES service_types(id),
-    main_category TEXT,
-    sub_category TEXT,
-    date_of_service DATE,
-    nature_of_service TEXT,
-    quantity INTEGER,
-    rate_per_unit NUMERIC(14, 2),
-    total_amount NUMERIC(14, 2),
-    has_issues BOOLEAN DEFAULT FALSE,
-    issue_notes TEXT,
-    amount_in_comments NUMERIC(14, 2),
-    category TEXT,
-    comments TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE service_assignments (
-    id SERIAL PRIMARY KEY,
-    service_id INTEGER REFERENCES services(id),
-    employee_id INTEGER REFERENCES employees(id),
-    role TEXT DEFAULT 'helper'
-);
-```
 
 ### 4. Run Locally
 
