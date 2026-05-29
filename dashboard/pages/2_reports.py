@@ -119,17 +119,40 @@ df_type = df.groupby("main_category").agg(
     Total_Revenue=("total_amount", "sum")
 ).reset_index().sort_values("Service_Count", ascending=False)
 
+# Build consistent color map — same color for same category in both charts
+categories = sorted(df_type["main_category"].unique())
+color_palette = (
+    px.colors.qualitative.Set2 +
+    px.colors.qualitative.Set3 +
+    px.colors.qualitative.Pastel
+)
+color_map = {cat: color_palette[i % len(color_palette)] for i, cat in enumerate(categories)}
+
 col1, col2 = st.columns(2)
 with col1:
-    fig3 = px.pie(df_type, names="main_category", values="Service_Count",
-                  title="Number of Services by Type")
-    fig3.update_traces(textposition="inside", textinfo="percent+label")
+    fig3 = px.pie(
+        df_type,
+        names="main_category",
+        values="Service_Count",
+        title="Number of Services by Type",
+        color="main_category",                   # ← critical
+        color_discrete_map=color_map,            # ← critical
+        category_orders={"main_category": categories}  # ← ensures same order
+    )
+    fig3.update_traces(textposition="inside", textinfo="percent+label", sort=False)
     st.plotly_chart(fig3, use_container_width=True)
 
 with col2:
-    fig4 = px.pie(df_type, names="main_category", values="Total_Revenue",
-                  title="Revenue by Service Type")
-    fig4.update_traces(textposition="inside", textinfo="percent+label")
+    fig4 = px.pie(
+        df_type,
+        names="main_category",
+        values="Total_Revenue",
+        title="Revenue by Service Type",
+        color="main_category",                   # ← critical
+        color_discrete_map=color_map,            # ← critical
+        category_orders={"main_category": categories}  # ← ensures same order
+    )
+    fig4.update_traces(textposition="inside", textinfo="percent+label", sort=False)
     st.plotly_chart(fig4, use_container_width=True)
 
 st.markdown("---")
@@ -150,7 +173,19 @@ bucket_order = ["₹0 (No charge)", "₹1 - ₹500", "₹501 - ₹1,000",
                 "₹1,001 - ₹2,000", "₹2,001 - ₹5,000",
                 "₹5,001 - ₹10,000", "₹10,000+"]
 
+# Sequential red gradient — light for low, dark for high
+bucket_color_map = {
+    "₹0 (No charge)": "#cccccc",
+    "₹1 - ₹500": "#fee5d9",
+    "₹501 - ₹1,000": "#fcae91",
+    "₹1,001 - ₹2,000": "#fb6a4a",
+    "₹2,001 - ₹5,000": "#de2d26",
+    "₹5,001 - ₹10,000": "#a50f15",
+    "₹10,000+": "#67000d",
+}
+
 df["revenue_bucket"] = df["total_amount"].apply(make_bucket)
+
 df_buckets = df.groupby("revenue_bucket").agg(Count=("id", "count")).reset_index()
 df_buckets["order"] = df_buckets["revenue_bucket"].apply(
     lambda x: bucket_order.index(x) if x in bucket_order else 99
@@ -159,10 +194,16 @@ df_buckets = df_buckets.sort_values("order")
 
 col1, col2 = st.columns(2)
 with col1:
-    fig5 = px.pie(df_buckets, names="revenue_bucket", values="Count",
-                  title="Services by Revenue Range",
-                  category_orders={"revenue_bucket": bucket_order})
-    fig5.update_traces(textposition="inside", textinfo="percent+label")
+    fig5 = px.pie(
+        df_buckets,
+        names="revenue_bucket",
+        values="Count",
+        title="Services by Revenue Range",
+        color="revenue_bucket",
+        color_discrete_map=bucket_color_map,
+        category_orders={"revenue_bucket": bucket_order}
+    )
+    fig5.update_traces(textposition="inside", textinfo="percent+label", sort=False)
     st.plotly_chart(fig5, use_container_width=True)
 
 with col2:
@@ -174,10 +215,16 @@ with col2:
     )
     df_bucket_rev = df_bucket_rev.sort_values("order")
 
-    fig6 = px.pie(df_bucket_rev, names="revenue_bucket", values="Total_Revenue",
-                  title="Revenue Share by Range",
-                  category_orders={"revenue_bucket": bucket_order})
-    fig6.update_traces(textposition="inside", textinfo="percent+label")
+    fig6 = px.pie(
+        df_bucket_rev,
+        names="revenue_bucket",
+        values="Total_Revenue",
+        title="Revenue Share by Range",
+        color="revenue_bucket",
+        color_discrete_map=bucket_color_map,
+        category_orders={"revenue_bucket": bucket_order}
+    )
+    fig6.update_traces(textposition="inside", textinfo="percent+label", sort=False)
     st.plotly_chart(fig6, use_container_width=True)
 
 st.markdown("---")
