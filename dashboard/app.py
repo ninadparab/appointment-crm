@@ -52,14 +52,14 @@ st.markdown("### Navigation")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.page_link("pages/1_Search.py", label="🔍  Search Customers", use_container_width=True)
+    st.page_link("pages/1_search.py", label="🔍  Search Customers", use_container_width=True)
     st.caption("Find customers by name or phone, view their service history")
     st.write("")
     st.page_link("pages/3_Add_Customer.py", label="➕  Add New Customer", use_container_width=True)
     st.caption("Manually add a new customer (optionally with a service)")
 
 with col2:
-    st.page_link("pages/2_Reports.py", label="📈  Reports & Analytics", use_container_width=True)
+    st.page_link("pages/2_reports.py", label="📈  Reports & Analytics", use_container_width=True)
     st.caption("Revenue trends, top clients, service breakdown, area map")
     st.write("")
     st.page_link("pages/4_Add_Service.py", label="🔧  Add Service", use_container_width=True)
