@@ -1,76 +1,104 @@
-# Appointment CRM — AI-Powered Field Service System
+# 📞 Appointment CRM — AI-Powered Service Business Automation
 
-An end-to-end CRM system that captures customer appointments from **phone calls** and **WhatsApp messages** using AI, supports **Hindi, Marathi, and English (Hinglish)**, and stores everything in a structured database with a searchable dashboard.
+An end-to-end AI system that **automatically captures customer appointments from phone calls and WhatsApp messages**, transcribes them using speech-to-text models, extracts structured booking data using LLMs, and stores everything in a relational database — with a dashboard for search, analytics, and reporting.
 
-Built for a Mumbai-based cleaning/field service business but adaptable to any appointment-driven business.
+Supports **multilingual conversations** (Hindi, Marathi, English, and code-mixed Hinglish) using India-focused speech models.
 
 ---
 
-## 🎯 What It Does
+## 🧠 The Problem
+
+Small service businesses (cleaning, home repair, salon, clinic) manage appointments through phone calls and WhatsApp — often losing customer data, double-booking, or forgetting follow-ups because everything lives in the owner's memory or scattered chat threads.
+
+**This system eliminates manual data entry entirely.** Every customer interaction is automatically captured, structured, and stored.
+
+---
+
+## 🎯 How It Works
 
 ```
-📞 Customer calls         💬 Customer messages
-   business number           on WhatsApp
-        │                          │
-        ▼                          ▼
-   Phone provider           WhatsApp Business
-   (Twilio/Exotel/             API (Interakt)
-    MyOperator)                    │
-        │                          │
-        └────────────┬─────────────┘
-                     ▼
-              Flask webhook
-              server on Render
-                     │
-        ┌────────────┴────────────┐
-        ▼                         ▼
-  AI Transcription          (text already)
-  (Whisper / Sarvam AI)            │
-        │                          │
-        └────────────┬─────────────┘
-                     ▼
-            GPT-4o Mini extracts
-            structured appointment
-                     │
-                     ▼
-              Supabase database
-                     │
-                     ▼
-         Streamlit dashboard for
-         search and reports
+📞 Customer calls              💬 Customer sends
+   business number                WhatsApp message
+        │                              │
+        ▼                              ▼
+   Phone provider               WhatsApp Business
+   (Twilio / Exotel /              API (Interakt)
+    MyOperator)                        │
+        │                              │
+        └──────────────┬───────────────┘
+                       ▼
+                Flask webhook
+                server (Render)
+                       │
+          ┌────────────┴────────────┐
+          ▼                         ▼
+    AI Transcription           (already text)
+    Whisper / Sarvam AI              │
+          │                          │
+          └────────────┬─────────────┘
+                       ▼
+              GPT-4o Mini extracts
+              structured JSON:
+              {name, phone, date,
+               time, service, source}
+                       │
+                       ▼
+                Supabase (PostgreSQL)
+                ┌──────┴──────┐
+                ▼             ▼
+           Customers      Services
+                       │
+                       ▼
+              Streamlit Dashboard
+              search, reports, maps
 ```
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- **📞 Phone call automation** — records calls, transcribes, extracts customer name, date, time, service requested
-- **💬 WhatsApp integration** — auto-processes text messages into appointment records
-- **🇮🇳 Indian language support** — Hindi, Marathi, English, and mixed (Hinglish) via Sarvam AI
-- **🤖 Smart customer matching** — recognizes returning customers by phone, prevents duplicates
-- **📊 Streamlit dashboard** — search customers, view service history, reports with charts and Mumbai area map
-- **🗺️ Geographic visualization** — revenue by Mumbai neighborhood with interactive map
-- **🛡️ Data quality tracking** — flags suspicious entries (huge amounts, math errors) for review
-- **🔐 Password protected** — dashboard secured behind auth
-- **☁️ Always on** — Flask server runs 24/7 on Render, dashboard on Streamlit Cloud
+### AI Pipeline
+- **Dual speech-to-text**: OpenAI Whisper (English) + Sarvam AI (Hindi, Marathi, Hinglish)
+- **Smart language detection**: auto-detects language — no manual configuration needed
+- **Structured extraction**: GPT-4o Mini pulls customer name, phone, date, time, service type, and ad source from free-form conversations
+- **Code-mixing support**: handles natural switches like *"Mujhe kal 3 baje appointment book karni hai for sofa cleaning"*
+
+### Customer Management
+- **Automatic deduplication**: matches returning customers by phone number
+- **Name conflict handling**: detects when a different person calls from the same number
+- **Multi-phone support**: stores primary + additional phone numbers per customer
+- **Data quality flags**: `has_issues` and `issue_notes` fields track suspicious entries
+
+### Dashboard (Streamlit)
+- **Customer search**: by name, phone, or both — with full service history
+- **Revenue reports**: over time (day/week/month), by service type, by revenue range
+- **Geographic analysis**: revenue by neighborhood with interactive map (OpenStreetMap)
+- **Top clients**: by month and custom date range
+- **Data export**: download filtered data as CSV
+- **Password protected**: simple auth for business owner access
+- **Mobile-friendly**: navigation cards that work on phone screens
+
+### Integrations
+- **Phone**: Twilio (global), Exotel (India), MyOperator (India) — webhook handlers for all three
+- **WhatsApp**: Interakt BSP with standard Meta webhook format
+- **Duplicate prevention**: tracks processed recording IDs to prevent double-processing
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Speech-to-text (English)** | OpenAI Whisper |
-| **Speech-to-text (Indian languages)** | Sarvam AI (`saaras:v3` with `codemix` mode) |
-| **LLM extraction** | OpenAI GPT-4o Mini |
-| **Phone (testing)** | Twilio |
-| **Phone (production)** | Exotel / MyOperator |
-| **WhatsApp** | Interakt (BSP for WhatsApp Business API) |
-| **Web framework** | Flask + Gunicorn |
-| **Web server hosting** | Render |
-| **Database** | Supabase (PostgreSQL) |
-| **Dashboard** | Streamlit + Plotly |
-| **Dashboard hosting** | Streamlit Cloud |
+| Component | Technology | Why |
+|---|---|---|
+| Speech-to-text (English) | OpenAI Whisper | Best accuracy, simple API |
+| Speech-to-text (Indian) | Sarvam AI `saaras:v3` | Purpose-built for Hindi/Marathi code-mixing |
+| LLM extraction | GPT-4o Mini | Cost-effective structured JSON output |
+| Phone recording | Twilio / Exotel / MyOperator | Multi-provider webhook support |
+| WhatsApp | Interakt (WhatsApp BSP) | India-focused, easy setup |
+| Web framework | Flask + Gunicorn | Lightweight webhook server |
+| Hosting | Render | Free tier, GitHub auto-deploy |
+| Database | Supabase (PostgreSQL) | Relational with API, free tier, built-in UI |
+| Dashboard | Streamlit + Plotly | Rapid development, interactive charts |
+| Dashboard hosting | Streamlit Cloud | Free, GitHub auto-deploy |
 
 ---
 
@@ -79,26 +107,26 @@ Built for a Mumbai-based cleaning/field service business but adaptable to any ap
 ```
 appointment-crm/
 │
-├── pipeline.py              # AI pipeline: audio → transcript → structured data
-├── server.py                # Flask webhook server (Twilio, Exotel, MyOperator, WhatsApp)
-├── supabase_db.py           # Database functions (find/create customer, save service)
-├── transcribe_sarvam.py     # Sarvam AI integration for Indian languages
-├── migrate.py               # Initial data migration from Excel
-├── requirements.txt         # Python dependencies (Flask server)
+├── pipeline.py              # Core: audio → transcript → structured data
+├── server.py                # Flask webhook server (all providers)
+├── supabase_db.py           # Database CRUD operations
+├── transcribe_sarvam.py     # Sarvam AI integration (Indian languages)
+├── zoho_auth_manager.py     # Legacy Zoho OAuth (kept for reference)
+├── migrate.py               # Data migration: Excel → Supabase
+├── migrate_homecare.py      # Domain-specific migration with data cleaning
+│
+├── requirements.txt         # Flask server dependencies
 ├── Procfile                 # Render deployment config
-├── .python-version          # Pins Python 3.11
-├── .env                     # API keys (not in Git)
+├── .python-version          # Python 3.11
 │
 └── dashboard/
-    ├── app.py               # Home page with navigation
-    ├── database.py          # Supabase queries for dashboard
+    ├── app.py               # Home page + password auth + navigation
+    ├── database.py          # All Supabase queries for dashboard
     ├── requirements.txt     # Streamlit dependencies
-    ├── .streamlit/
-    │   └── secrets.toml     # Password (not in Git)
     └── pages/
         ├── 1_Search.py      # Customer search + service history
-        ├── 2_Reports.py     # Revenue charts, top clients, area map
-        ├── 3_Add_Customer.py # Manual customer + optional service form
+        ├── 2_Reports.py     # Analytics: charts, top clients, area map
+        ├── 3_Add_Customer.py # Add customer form (+ optional first service)
         └── 4_Add_Service.py  # Add service to existing customer
 ```
 
@@ -106,150 +134,230 @@ appointment-crm/
 
 ## 🗄️ Database Schema
 
-```
-customers
-├── id, name, phone, additional_phones
-├── email, address, area, category
-├── lead_source, comments, created_at
+```sql
+-- Normalized relational model with canonical service types
 
-service_types (canonical)
-├── id, canonical_name
-├── main_category (e.g. "Flat")
-├── sub_category (e.g. "2BHK")
+customers (id, name, phone, additional_phones, email,
+           address, area, category, lead_source, comments)
 
-services
-├── id, customer_id → customers
-├── service_type_id → service_types
-├── main_category, sub_category
-├── date_of_service, nature_of_service
-├── quantity, rate_per_unit, total_amount
-├── has_issues, issue_notes, amount_in_comments
-├── category, comments
+service_types (id, canonical_name, main_category, sub_category)
+-- e.g. "Flat — 2BHK", main="Flat", sub="2BHK"
+
+services (id, customer_id, service_type_id,
+          main_category, sub_category,
+          date_of_service, nature_of_service,
+          quantity, rate_per_unit, total_amount,
+          has_issues, issue_notes, amount_in_comments)
+
+employees (id, name, phone, designation, status)
+
+service_assignments (id, service_id, employee_id, role)
+-- Junction table for many-to-many employee ↔ service
 ```
 
 ---
 
-## 🚀 Setup Guide
+## 🚀 Setup
 
-### Prerequisites
+### 1. Clone and Install
 
-- Python 3.11
-- Git
-- A Supabase account (free tier works)
-- OpenAI API key with billing
-- Sarvam AI API key (for Indian language support)
-- Phone provider account (Twilio for testing, MyOperator/Exotel for India)
-- Interakt account (for WhatsApp)
+```bash
+git clone https://github.com/ninadparab/appointment-crm.git
+cd appointment-crm
 
-### Environment Variables
+python -m venv venv
+source venv/Scripts/activate   # Windows
+# or: source venv/bin/activate # macOS/Linux
+
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment
 
 Create `.env` in the project root:
 
 ```env
-# OpenAI
-OPENAI_API_KEY=sk-...
+# AI Services
+OPENAI_API_KEY=your_key
+SARVAM_API_KEY=your_key
+USE_INDIAN_LANGUAGES=true   # false for English-only mode
 
-# Sarvam AI (for Hindi/Marathi)
-SARVAM_API_KEY=sk_...
-USE_INDIAN_LANGUAGES=true
-
-# Supabase
+# Database
 SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_KEY=eyJ...   # service_role key
+SUPABASE_KEY=your_service_role_key
 
-# Twilio (for testing)
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
-TWILIO_PHONE_NUMBER=+1...
+# Phone Provider (pick one)
+TWILIO_ACCOUNT_SID=your_sid
+TWILIO_AUTH_TOKEN=your_token
+# EXOTEL_API_KEY=your_key
+# EXOTEL_API_TOKEN=your_token
+# MYOPERATOR_API_TOKEN=your_token
 
-# Exotel (optional)
-EXOTEL_API_KEY=...
-EXOTEL_API_TOKEN=...
-
-# MyOperator (optional)
-MYOPERATOR_API_TOKEN=...
-
-# WhatsApp (Interakt)
-INTERAKT_SECRET_KEY=...
+# WhatsApp
 WHATSAPP_VERIFY_TOKEN=any_random_string
+INTERAKT_SECRET_KEY=your_key
 ```
 
-### Local Development
+### 3. Set Up Database
+
+Run in Supabase SQL Editor:
+
+```sql
+CREATE TABLE service_types (
+    id SERIAL PRIMARY KEY,
+    canonical_name TEXT,
+    main_category TEXT,
+    sub_category TEXT
+);
+
+CREATE TABLE customers (
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    phone TEXT,
+    additional_phones TEXT,
+    email TEXT,
+    address TEXT,
+    area TEXT,
+    category TEXT,
+    lead_source TEXT,
+    comments TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE employees (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    phone TEXT,
+    designation TEXT,
+    status TEXT DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE services (
+    id SERIAL PRIMARY KEY,
+    customer_id INTEGER REFERENCES customers(id),
+    service_type_id INTEGER REFERENCES service_types(id),
+    main_category TEXT,
+    sub_category TEXT,
+    date_of_service DATE,
+    nature_of_service TEXT,
+    quantity INTEGER,
+    rate_per_unit NUMERIC(14, 2),
+    total_amount NUMERIC(14, 2),
+    has_issues BOOLEAN DEFAULT FALSE,
+    issue_notes TEXT,
+    amount_in_comments NUMERIC(14, 2),
+    category TEXT,
+    comments TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE service_assignments (
+    id SERIAL PRIMARY KEY,
+    service_id INTEGER REFERENCES services(id),
+    employee_id INTEGER REFERENCES employees(id),
+    role TEXT DEFAULT 'helper'
+);
+```
+
+### 4. Run Locally
 
 ```bash
-# Clone the repo
-git clone https://github.com/ninadparab/appointment-crm.git
-cd appointment-crm
-
-# Create virtual environment
-python -m venv venv
-source venv/Scripts/activate   # Windows Git Bash
-# or: source venv/bin/activate # macOS/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the Flask server locally
+# Flask server
 python server.py
 
-# Run the dashboard locally (in another terminal)
+# Dashboard (separate terminal)
 cd dashboard
 streamlit run app.py
 ```
 
-### Deploying
+### 5. Deploy
 
-**Flask Server → Render:**
-- Connect your GitHub repo to Render
-- Add all environment variables in Render settings
-- Deploys automatically on git push
+**Render** (Flask server): connect GitHub repo, add env vars, auto-deploys on push.
 
-**Dashboard → Streamlit Cloud:**
-- Connect repo at share.streamlit.io
-- Set main file path to `dashboard/app.py`
-- Add `SUPABASE_URL`, `SUPABASE_KEY`, `PASSWORD` to secrets
+**Streamlit Cloud** (Dashboard): connect repo, set main file to `dashboard/app.py`, add secrets.
 
 ---
 
 ## 📡 Webhook Endpoints
 
-After deployment your Flask server exposes:
-
-| Endpoint | Purpose | Used By |
+| Endpoint | Method | Provider |
 |---|---|---|
-| `GET  /` | Service info | Health checks |
-| `GET  /health` | Health check | Monitoring |
-| `POST /webhook/twilio/answer` | Twilio call flow control | Twilio |
-| `POST /webhook/twilio/recording` | Process Twilio recording | Twilio |
-| `POST /webhook/call` | Exotel call recording | Exotel |
-| `POST /webhook/myoperator` | MyOperator call recording | MyOperator |
-| `POST /webhook/whatsapp` | WhatsApp message events | Interakt |
-
----
-## 🧪 Tested With
-
-- ✅ English phone calls via Twilio
-- ✅ Hindi phone calls via Sarvam AI transcription
-- ✅ Marathi phone calls via Sarvam AI transcription
-- ✅ Mixed Hindi + English (Hinglish) — perfectly transcribed and categorized
-- ✅ Customer lookup by phone (existing vs new)
-- ✅ Webhook deduplication (prevents double-processing)
-- ✅ 16,541 historical services migrated successfully
+| `/health` | GET | Monitoring |
+| `/webhook/twilio/answer` | POST | Twilio — returns TwiML to record call |
+| `/webhook/twilio/recording` | POST | Twilio — processes completed recording |
+| `/webhook/call` | POST | Exotel — call recording callback |
+| `/webhook/myoperator` | POST | MyOperator — call summary event |
+| `/webhook/whatsapp` | GET/POST | Interakt — WhatsApp message webhook |
 
 ---
 
-## 🛠️ Built With AI Assistance
+## 🧩 Adapting for Your Business
 
-This project was built collaboratively with **Claude** (Anthropic) over multiple sessions — from initial architecture discussions through full implementation, debugging, deployment, and data migration of 10,000+ customers and 16,000+ services.
+This system is designed for any appointment-driven service business. To adapt:
+
+1. **Service types**: update the `categorize_service()` function in the conversion script with your own categories (e.g. salon services, clinic appointments, tutoring sessions)
+2. **Area coordinates**: update the `MUMBAI_AREAS` dict in reports with your city's neighborhoods
+3. **Revenue buckets**: adjust the `make_bucket()` ranges to match your pricing
+4. **Phone provider**: pick whichever provider serves your country — the webhook handlers are modular
+5. **Languages**: toggle `USE_INDIAN_LANGUAGES` or add new Sarvam language codes
+
+---
+
+## 💡 Design Decisions
+
+| Decision | Rationale |
+|---|---|
+| Supabase over Zoho CRM | Simple API key auth vs complex OAuth, proper relational model, free tier |
+| Sarvam AI over Whisper for Indian languages | Purpose-built for Hindi/Marathi code-mixing, `codemix` mode handles natural conversations |
+| Flask over FastAPI | Lighter, sufficient for webhook handling, simpler deployment |
+| Streamlit over React | Faster development in Python, good enough for internal dashboard, free hosting |
+| Canonical service types | 5,000+ free-text variations consolidated into ~30 canonical categories for meaningful reports |
+| `has_issues` flag | Instead of dropping bad data, flag it for human review — preserves data integrity |
+| Multi-provider webhook support | Business can switch phone providers without code changes |
+
+---
+
+## 📊 Data Pipeline Details
+
+### Phone Call Flow
+```
+Incoming call → Provider records → Webhook fires
+→ Download audio → Sarvam/Whisper STT → GPT extraction
+→ Customer lookup by phone → Create/update customer
+→ Create service record → Done
+```
+
+### WhatsApp Flow
+```
+Incoming message → Webhook fires
+→ GPT extraction directly from text (no STT needed)
+→ Customer lookup → Create/update → Done
+```
+
+### Data Quality Pipeline
+```
+Raw Excel data → Parse amounts (handles "5@400=2000" patterns)
+→ Parse phones (handles "9821071497/ 9820053235")
+→ Categorize services (free text → canonical types)
+→ Flag issues (huge amounts, math mismatches, bad dates)
+→ Deduplicate customers → Normalize → Upload to Supabase
+```
+
+---
+
+## 🛠️ Built With
+
+Built collaboratively with **Claude** (Anthropic) — from architecture design through implementation, debugging, deployment, and data migration.
 
 ---
 
 ## 📄 License
 
-Private project. Not licensed for public use without permission.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 🙋‍♂️ Author
+## 👤 Author
 
-[Ninad Parab](https://github.com/ninadparab)
+**Ninad Parab** — [GitHub](https://github.com/ninadparab)
