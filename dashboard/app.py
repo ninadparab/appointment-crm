@@ -33,25 +33,34 @@ if not check_password():
 
 st.set_page_config(page_title="CRM Dashboard", page_icon="📊", layout="wide")
 st.title("📊 Appointment CRM Dashboard")
-st.markdown("Welcome! Use the sidebar to navigate.")
 
-st.markdown("---")
+# ── Stats ──────────────────────────────────────────────
 counts = get_total_counts()
-
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric("Total Customers", f"{counts['customers']:,}")
 with col2:
     st.metric("Total Services", f"{counts['services']:,}")
 with col3:
-    st.metric("⚠️ Flagged for Review", f"{counts['issues']:,}",
-              help="Services with data quality issues (huge amounts, suspicious quantities, etc.)")
+    st.metric("⚠️ Flagged for Review", f"{counts['issues']:,}")
 
 st.markdown("---")
-st.markdown("### Quick Navigation")
-st.markdown("""
-- **🔍 Search** — Find customers by name or phone, view their history
-- **📈 Reports** — Revenue and service trends, top clients, area analysis
-- **➕ Add Customer** — Manually add new customer (optionally with first service)
-- **🔧 Add Service** — Add a service to an existing customer
-""")
+
+# ── Navigation Cards (mobile-friendly) ─────────────────
+st.markdown("### Navigation")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.page_link("pages/1_Search.py", label="🔍  Search Customers", use_container_width=True)
+    st.caption("Find customers by name or phone, view their service history")
+    st.write("")
+    st.page_link("pages/3_Add_Customer.py", label="➕  Add New Customer", use_container_width=True)
+    st.caption("Manually add a new customer (optionally with a service)")
+
+with col2:
+    st.page_link("pages/2_Reports.py", label="📈  Reports & Analytics", use_container_width=True)
+    st.caption("Revenue trends, top clients, service breakdown, area map")
+    st.write("")
+    st.page_link("pages/4_Add_Service.py", label="🔧  Add Service", use_container_width=True)
+    st.caption("Add a new service to an existing customer")
