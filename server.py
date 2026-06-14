@@ -4,6 +4,9 @@ from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from pipeline import transcribe_audio, extract_appointment
 from supabase_db import save_appointment
+from threading import Thread
+import time
+from supabase_db import supabase
 
 load_dotenv()
 
@@ -268,6 +271,20 @@ def test_call():
     """Test pipeline with local audio file"""
     return process_audio("test_call.m4a")
 
+# ── SUPABASE KEEP-ALIVE ─────────────────────────────────
+
+def keep_supabase_alive():
+    """Ping Supabase every 12 hours to prevent free tier pausing"""
+    while True:
+        try:
+            result = supabase.table("customers").select("id").limit(1).execute()
+            print(f"🏓 Supabase ping — alive")
+        except Exception as e:
+            print(f"🏓 Supabase ping failed: {e}")
+        time.sleep(43200)  # 12 hours
+
+ping_thread = Thread(target=keep_supabase_alive, daemon=True)
+ping_thread.start()
 
 # ── START SERVER ─────────────────────────────────────────────
 
